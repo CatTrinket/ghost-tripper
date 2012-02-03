@@ -1,7 +1,7 @@
 from struct import unpack
 from sys import argv
 
-from tables import text_table, colors
+from tables import *
 
 def lz_decompress(bytes):
     # Copy-pasted straight out of bw_animations.py; pretty unreadable but I
@@ -67,6 +67,10 @@ while data:
         color = read_char()
         color = colors.setdefault(color, '#' + str(color))
         print('[[COLOR {0}]]'.format(color), end='')
+    elif char == 0xff08:
+        portrait = read_char()
+        portrait = portraits.setdefault(portrait, '#' + hex(portrait))
+        print('[[PORTRAIT: {0}]]'.format(portrait))
     else:
         char = text_table.setdefault(char, r'\x{0:04x}'.format(char))
         print(char, end='')
