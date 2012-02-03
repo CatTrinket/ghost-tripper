@@ -114,6 +114,9 @@ text_table = {
     0x70: 'û',
     0x71: 'ü',
 
+    0x73: '¡',
+    0x74: '¿',
+
     0xe1: '.',
 
     0xe5: '(',
@@ -126,25 +129,30 @@ text_table = {
 
     0xef: ',',
 
+    0xf2: '*',
     0xf3: '’',
     0xf4: '-',
 
     0xf7: '%',
-    0xf8: '…',  # XXX vertically centered
+    0xf8: '…',  # XXX Vertically centered
     0xf9: '~',
-    0xfa: '«',  # XXX bigger
-    0xfb: '»',  # XXX bigger
+    0xfa: '«',  # XXX Bigger
+    0xfb: '»',  # XXX Bigger
     0xfc: '&',
     0xfd: '☆',
     0xfe: '♪',
     0xff: ' ',
 
+    # XXX Obtain images, move out of tables
+    0x0116: '[[BACK]]',
     0x0117: '[[TRICK]]',
+    0x0118: '[[GHOST]]',
 }
 
 colors = {
     0x5: 'BLUE',
     0x6: 'RED',
+    0x9: 'ALSO BLUE?',
     0xf: 'BLACK',
 }
 
@@ -156,6 +164,8 @@ portraits = {
     0x29: 'Sissel_frown',
 
     0x2b: 'Sissel_pensive',
+
+    0x2d: 'Sissel_sweating',
 
     0x2f: 'Sissel_befuddled',
 
@@ -169,4 +179,6 @@ portraits = {
     0x81: 'Ray_on_right',
 
     0x83: 'Ray_off_right',
+
+    0x10c: 'Floating-soul',
 }
