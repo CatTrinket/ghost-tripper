@@ -150,9 +150,8 @@ text_table = {
 }
 
 colors = {
-    0x5: 'BLUE',
     0x6: 'RED',
-    0x9: 'ALSO BLUE?',
+    0x9: 'BLUE',
     0xf: 'BLACK',
 }
 
