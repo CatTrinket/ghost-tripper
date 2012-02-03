@@ -159,6 +159,12 @@ colors = {
 portraits = {
     0x01: 'Jeego',
 
+    0x07: 'Lynne_sweating',
+
+    0x0d: 'Lynne_pensive',
+
+    0x13: 'Lynne_frown',
+
     0x27: 'Sissel_smile',
 
     0x29: 'Sissel_frown',
@@ -174,6 +180,9 @@ portraits = {
     0x36: 'Sissel_surprised',
 
     0x3a: 'Sissel_angry',
+
+    0x7b: 'Jeego_left',
+    0x7c: 'Jeego_right',
 
     0x80: 'Ray_on_left',
     0x81: 'Ray_on_right',
