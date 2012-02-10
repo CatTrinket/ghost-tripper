@@ -1,8 +1,10 @@
+from io import BytesIO
 from struct import unpack
 
-def untile(data, width, height):
-    """Width and height are in tiles note to self better docstring"""
+from formats import parse_cpac
 
+def untile(data, width, height):
+    """Width and height are tiles.  Needs a toooon of improvement."""
     pixel_width = width * 8
     pixel_height = height * 8
 
@@ -27,38 +29,31 @@ def untile(data, width, height):
 
     return pixels
 
-data = open('/tmp/GT/fsroot/cpac_2d.bin', 'rb')
 
-#print(data.index(b'\xc4\xd6\x03'))
+# Dump cpac_2d.bin's sections to separate files for easier individual
+# staring-down
+with open('/tmp/GT/fsroot/cpac_2d.bin', 'rb') as cpac_2d:
+    data_sections = parse_cpac(cpac_2d)
 
-#exit()
+for n, section in enumerate(data_sections):
+    output = open('/tmp/cpac/{0}'.format(n), 'wb')
+    output.write(section)
 
-data.seek(0x3e36100 - 512)
+
+# Rip a few tiles of... something to a PGM.
+data = BytesIO(data_sections[4])
+data.seek(0xd3300 - 512)
 
 pixels = untile(bytearray(data.read(1024)), 4, 4)
-for row in pixels:
-    print(*row)
 
-exit()
+with open('/tmp/tiles.pgm', 'w') as output:
+    # PGM header
+    output.write(
+        'P2\n'
+        '32 32\n'
+        '255\n'
+    )
 
-data.seek(0x124200)  # First RNAN
-data.seek(0x10, 1)  # Skip RNAN header
-
-assert data.read(4) == b'KNBA'
-
-size, animations, frames = unpack('<LHH', data.read(8))
-
-data.seek(0x14, 1)  # Skip more junk
-
-animation_data = []
-for i in range(animations):
-    animation_data.append(unpack('<L8xL', data.read(16)))
-
-frame_widths = []
-for i in range(frames):
-    frame_widths.append(*unpack('<4xH2x', data.read(8)))
-
-data.seek(0x124210 + size)  # Skip to the good part I guess???
-
-for frame in frame_widths:
-    print(data.read(frame * 4))
+    for row in pixels:
+        output.write(' '.join(str(pixel) for pixel in row))
+        output.write('\n')
