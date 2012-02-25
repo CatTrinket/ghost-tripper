@@ -6,6 +6,43 @@ from sys import argv
 from lzss3 import decompress
 from tables import *
 
+def decode_message(message_data):
+    """Decode the message from an iterator"""
+
+    message = ''
+
+    for char in message_data:
+        if char == 0xff01:
+            message += '\n'
+        elif char == 0xff02:
+            message += '\n\n'
+        elif char == 0xff05:
+            color = next(message_data)
+            color = colors.setdefault(color, '#' + str(color))
+            message += '[[COLOR {0}]]'.format(color)
+        elif char == 0xff08:
+            portrait = next(message_data)
+            portrait = portraits.setdefault(portrait, '#' + hex(portrait))
+            message += '[[PORTRAIT: {0}]]\n'.format(portrait)
+        else:
+            message += text_table.setdefault(char, r'\x{0:04x}'.format(char))
+
+    return message
+
+def get_label(data, pointer):
+    """Get and return the label at the given pointer."""
+    data.seek(pointer)
+    label = bytearray(b'')
+
+    while True:
+        char, = data.read(1)
+        if char == 0:
+            break
+        else:
+            label.append(char)
+
+    return label.decode('ASCII')
+
 def message_iterator(data, pointer):
     """Yield the message at the given pointer, character by character.
 
@@ -20,6 +57,7 @@ def message_iterator(data, pointer):
         else:
             yield char
 
+
 with open(argv[1], 'rb') as text_file:
     data = decompress(text_file)
 
@@ -27,7 +65,7 @@ data = BytesIO(data)
 
 assert data.read(4) == b'1LMG'
 
-# Seek to message pointers
+# Seek to and read message pointers
 data.seek(8)
 pointers_offset, = unpack('<H', data.read(2))
 data.seek(pointers_offset + 0x34)
@@ -47,40 +85,14 @@ labels_pointer = data.tell()  # XXX Can I actually *find* this anywhere?
 
 for message in messages:
     # Find the label and print it as a header
-    data.seek(labels_pointer + message.label_offset)
+    label = get_label(data, labels_pointer + message.label_offset)
 
-    label = bytearray(b'')
-
-    while True:
-        char, = data.read(1)
-        if char == 0:
-            break
-        else:
-            label.append(char)
-
-    label = label.decode('ASCII')
     print(label)
     print('=' * len(label))
 
 
     # Extract the actual message
     message = message_iterator(data, message.message_pointer)
+    message = decode_message(message)
 
-    for char in message:
-        if char == 0xff01:
-            print()
-        elif char == 0xff02:
-            print('\n\n', end='')
-        elif char == 0xff05:
-            color = next(message)
-            color = colors.setdefault(color, '#' + str(color))
-            print('[[COLOR {0}]]'.format(color), end='')
-        elif char == 0xff08:
-            portrait = next(message)
-            portrait = portraits.setdefault(portrait, '#' + hex(portrait))
-            print('[[PORTRAIT: {0}]]'.format(portrait))
-        else:
-            char = text_table.setdefault(char, r'\x{0:04x}'.format(char))
-            print(char, end='')
-
-    print('\n\n', end='')  # Blank line between messages
+    print(message, end='\n\n')
