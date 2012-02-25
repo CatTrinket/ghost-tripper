@@ -48,7 +48,7 @@ class Screen():
             for pixel_num, pixel in enumerate(tiles[tile.tile]):
                 # XXX Transforming will go here once I need it
                 if tile.transformation != 0:
-                    raise NotImplemented('NTFS tile transformation')
+                    raise NotImplementedError('NTFS tile transformation')
 
                 # The pixel's location within the entire image
                 x = pixel_num % 8 + tile_x * 8
