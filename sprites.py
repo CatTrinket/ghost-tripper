@@ -4,6 +4,12 @@ from struct import unpack
 from formats import parse_cpac
 from lzss3 import decompress
 
+def rgb(color):
+    if color > 0x7fff:
+        raise ValueError("color too big")  # Yes I know about the transparency bit
+
+    return (color & 31, color >> 5 & 31, color >> 10 & 31)
+
 def untile(data, width, height):
     """Width and height are tiles.  Needs a toooon of improvement."""
     pixel_width = width * 8
@@ -47,7 +53,14 @@ for n, section in enumerate(data_sections):
     output.write(section)
 
 
-# Rip the Capcop logo???
+# Rip a palette that I think goes with the Capcom logo
+data = BytesIO(data_sections[0])
+data.seek(0x2d80)  # Pointer found at 0x14
+
+palette = [rgb(color) for color in unpack('<256H', data.read(0x200))]
+
+
+# Rip the Capcom logo... sort of
 data = BytesIO(data_sections[2])
 data.seek(0xa00)  # Pointer found at 0x14
 
@@ -57,10 +70,13 @@ pixels = untile(pixels, 24, 8)
 with open('/tmp/logo.ppm', 'w') as output:
     # PPM header
     output.write(
-        'P2\n'
+        'P3\n'
         '192 64\n'
-        '255\n'
+        '31\n'
     )
 
     for row in pixels:
-        print(*row, file=output)
+        for pixel in row:
+            print(*palette[pixel], file=output, end='  ')
+
+        print(file=output)
