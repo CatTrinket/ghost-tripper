@@ -18,13 +18,19 @@ class NTFP():
         self.a = color >> 15
 
 class NTFS():
-    """A single tile in a screen."""
+    """A single tile in a screen.
+
+    No relation to the filesystem of the same name.
+    """
     def __init__(self, tile):
         tile, = unpack('<H', tile)
 
         self.palette = tile >> 12
         self.transformation = tile >> 10 & 0x3
         self.tile = tile & 0x3ff
+
+        if self.transformation == 3:
+            raise ValueError('invalid NTFS transformation')
 
 class Screen():
     """Data to put together a sprite that takes up the entire screen."""
@@ -45,13 +51,19 @@ class Screen():
             tile_y = tile_num // 32
 
             for pixel_num, pixel in enumerate(tiles[tile.tile]):
-                # XXX Transforming will go here once I need it
-                if tile.transformation != 0:
-                    raise Exception('NTFS tile transformation')
-
                 # The pixel's location within the entire image
-                x = pixel_num % 8 + tile_x * 8
-                y = pixel_num // 8 + tile_y * 8
+                if tile.transformation == 0:
+                    # No change
+                    x = pixel_num % 8 + tile_x * 8
+                    y = pixel_num // 8 + tile_y * 8
+                elif tile.transformation == 1:
+                    # Flip along the x axis
+                    x = pixel_num % 8 + tile_x * 8
+                    y = 7 - pixel_num // 8 + tile_y * 8
+                elif tile.transformation == 2:
+                    # Flip along the y axis
+                    x = 7 - pixel_num % 8 + tile_x * 8
+                    y = pixel_num // 8 + tile_y * 8
 
                 pixels[y][x] = palettes[tile.palette][pixel]
 
