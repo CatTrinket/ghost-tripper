@@ -19,7 +19,6 @@ class NTFP():
 
 class NTFS():
     """A single tile in a screen."""
-
     def __init__(self, tile):
         tile, = unpack('<H', tile)
 
@@ -48,7 +47,7 @@ class Screen():
             for pixel_num, pixel in enumerate(tiles[tile.tile]):
                 # XXX Transforming will go here once I need it
                 if tile.transformation != 0:
-                    raise NotImplementedError('NTFS tile transformation')
+                    raise Exception('NTFS tile transformation')
 
                 # The pixel's location within the entire image
                 x = pixel_num % 8 + tile_x * 8
