@@ -1,14 +1,24 @@
 from io import BytesIO
 from struct import unpack
 
-from formats import parse_cpac
+from formats import NTFP, NTFS, Screen, parse_cpac
 from lzss3 import decompress
 
-def rgb(color):
-    if color > 0x7fff:
-        raise ValueError("color too big")  # Yes I know about the transparency bit
+def shorts(source):
+    """Iterate over the source bytes as a list of little-endian shorts
+    (two-byte integers).
+    """
 
-    return (color & 31, color >> 5 & 31, color >> 10 & 31)
+    while source:
+        yield source[:2]
+        source = source[2:]
+
+def split_into_tiles(data):
+    t = []
+    while data:
+        t.append(data[:64])
+        data = data[64:]
+    return t
 
 def untile(data, width, height):
     """Width and height are tiles.  Needs a toooon of improvement."""
@@ -55,28 +65,32 @@ for n, section in enumerate(data_sections):
 
 # Rip a palette that I think goes with the Capcom logo
 data = BytesIO(data_sections[0])
-data.seek(0x2d80)  # Pointer found at 0x14
+data.seek(0x2d80)
+palette = [NTFP(color) for color in shorts(data.read(0x200))]
 
-palette = [rgb(color) for color in unpack('<256H', data.read(0x200))]
 
-
-# Rip the Capcom logo... sort of
+# Rip the Capcom logo
 data = BytesIO(data_sections[2])
 data.seek(0xa00)  # Pointer found at 0x14
 
-pixels = decompress(data)
-pixels = untile(pixels, 24, 8)
+tiles = decompress(data)
+tiles = split_into_tiles(tiles)
+
+data.seek(0xa00 + 0xde8)
+screen = Screen(decompress(data))
+
+image = screen.image([palette], tiles)
 
 with open('/tmp/logo.ppm', 'w') as output:
     # PPM header
     output.write(
         'P3\n'
-        '192 64\n'
+        '256 192\n'
         '31\n'
     )
 
-    for row in pixels:
+    for row in image:
         for pixel in row:
-            print(*palette[pixel], file=output, end='  ')
+            print(pixel.r, pixel.g, pixel.b, file=output, end='  ')
 
         print(file=output)
