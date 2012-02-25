@@ -1,0 +1,6 @@
+0: palettes; offsets/lengths seem to be in units of thirty-two bytes
+1: first couple things are fonts
+2: first couple things are the Capcom logo and the Mobi Clip or whatever logo
+3: haven't looked
+4: haven't properly looked; the few tiles of "something" were in there
+5: Is this /anything/?
