@@ -22,6 +22,7 @@ class NTFS():
 
     No relation to the filesystem of the same name.
     """
+
     def __init__(self, tile):
         tile, = unpack('<H', tile)
 
@@ -30,10 +31,15 @@ class NTFS():
         self.tile = tile & 0x3ff
 
         if self.transformation == 3:
+            # XXX Is this actually invalid or does it just do both flips?
             raise ValueError('invalid NTFS transformation')
 
 class Screen():
-    """Data to put together a sprite that takes up the entire screen."""
+    """Data to put together a sprite that takes up the entire screen.
+
+    A collection of NTFS cells; essentially an NSCR/NRCS without the headers.
+    """
+
     def __init__(self, source):
         self.ntfs = []
 
@@ -71,6 +77,7 @@ class Screen():
 
 
 ### cpac stuff
+# XXX Turn these into pretty classes, too
 
 CPACSection = namedtuple('CPACSection', ['offset', 'length'])
 
