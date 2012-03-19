@@ -1,9 +1,10 @@
 from collections import namedtuple
+from operator import itemgetter
 from struct import unpack
 
 from construct import *
 
-### sprite things
+### Sprite-related structs
 
 class NTFPAdapter(Adapter):
     """A DS palette entry.
@@ -22,10 +23,6 @@ class NTFPAdapter(Adapter):
             a=bool(color >> 15)
         )
 
-ntfp = NTFPAdapter(ULInt16('color'))
-palette = GreedyRepeater(ntfp)
-
-
 class NTFSAdapter(Adapter):
     """A single tile in a screen.
 
@@ -42,13 +39,18 @@ class NTFSAdapter(Adapter):
             tile=obj & 0x3ff
         )
 
+
+ntfp = NTFPAdapter(ULInt16('color'))
+palette = GreedyRepeater(ntfp)
+
 ntfs = NTFSAdapter(ULInt16('tile'))
 ntfs_repeater = GreedyRepeater(ntfs)
 
 class Screen():
-    """Data to put together a sprite that takes up the entire screen.
+    """A sprite that takes up the entire screen.
 
-    A collection of NTFS cells; essentially an NSCR/NRCS without the headers.
+    A collection of NTFS cells in action.  Essentially an NSCR/NRCS without the
+    headers.
     """
 
     def __init__(self, source):
