@@ -46,6 +46,57 @@ palette = GreedyRepeater(ntfp)
 ntfs = NTFSAdapter(ULInt16('tile'))
 ntfs_repeater = GreedyRepeater(ntfs)
 
+# Animation BaNK
+abnk = Struct('ABNK',
+    Const(Bytes('stamp', 4), b'KNBA'),
+    ULInt32('section_size'),
+    ULInt16('bank_count'),
+    ULInt16('frame_count'),
+    ULInt32('bank_offset'),
+    ULInt32('header_offset'),
+    ULInt32('data_offset'),
+    Padding(8),
+    MetaRepeater(itemgetter('bank_count'), bank_block)
+    Padding(1),
+    MetaRepeater(itemgetter('bank_count'), header_block)
+    Padding(1),
+    MetaRepeater(itemgetter('bank_count'), data_block)
+)
+
+bank_block = Struct('bank block',
+    ULInt32('frame_count'),
+    ULInt16('data_type'),
+    ULInt16('unknown_1'),
+    ULInt32('unknown_2'),
+    ULInt32('header_start_offset')  # Relative to start of header block
+)
+
+header_block = Struct('header block',
+    ULInt32('data_start_offset'),  # Relative to start of data block
+    ULInt16('frame_duration'),
+    Const(ULInt16('beef'), 0xbeef)
+)
+
+data_block = Struct('data block',
+    ULInt16('cell_index'),
+    # Switch(
+    # )
+)
+
+# Nitro ANimation Resource
+nanr = Struct('NANR',
+    Const(Bytes('stamp', 4), b'RNAN'),
+    Const(Bytes('bom', 4), b'\xff\xfe\x00\x01'),
+    ULInt32('file_size'),
+    Const(ULInt16('header_size', 0x10),
+    ULInt16('section_count'),
+    abnk,
+    labl,
+    uext
+)
+
+### Classes to work with sprite-related structs
+
 class Screen():
     """A sprite that takes up the entire screen.
 
