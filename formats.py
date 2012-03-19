@@ -1,38 +1,49 @@
 from collections import namedtuple
 from struct import unpack
 
+from construct import *
+
 ### sprite things
 
-class NTFP():
+class NTFPAdapter(Adapter):
     """A DS palette entry.
 
     RGBA, five bits per colour channel and one bit for transparency.
     """
 
-    def __init__(self, color):
-        color, = unpack('<H', color)
+    def _encode(self, rgba, context):
+        return rgba.r | rgba.g << 5 | rgba.b << 10 | rgba.a << 15
 
-        self.r = color & 0x1f
-        self.g = color >> 5 & 0x1f
-        self.b = color >> 10 & 0x1f
-        self.a = color >> 15
+    def _decode(self, color, context):
+        return Container(
+            r=color & 0x1f,
+            g=color >> 5 & 0x1f,
+            b=color >> 10 & 0x1f,
+            a=bool(color >> 15)
+        )
 
-class NTFS():
+ntfp = NTFPAdapter(ULInt16('color'))
+palette = GreedyRepeater(ntfp)
+
+
+class NTFSAdapter(Adapter):
     """A single tile in a screen.
 
     No relation to the filesystem of the same name.
     """
 
-    def __init__(self, tile):
-        tile, = unpack('<H', tile)
+    def _encode(self, obj, context):
+        return obj.tile | obj.transformation << 10 | obj.palette << 12
 
-        self.palette = tile >> 12
-        self.transformation = tile >> 10 & 0x3
-        self.tile = tile & 0x3ff
+    def _decode(self, obj, context):
+        return Container(
+            palette=obj >> 12,
+            transformation=obj >> 10 & 0x3,
+            tile=obj & 0x3ff
+        )
 
-        if self.transformation == 3:
-            # XXX Is this actually invalid or does it just do both flips?
-            raise ValueError('invalid NTFS transformation')
+ntfs = NTFSAdapter(ULInt16('tile'))
+ntfs_repeater = GreedyRepeater(ntfs)
 
 class Screen():
     """Data to put together a sprite that takes up the entire screen.
@@ -41,11 +52,7 @@ class Screen():
     """
 
     def __init__(self, source):
-        self.ntfs = []
-
-        while source:
-            self.ntfs.append(NTFS(source[:2]))
-            source = source[2:]
+        self.ntfs = ntfs_repeater.parse(source)
 
     def image(self, palettes, tiles):
         """Actually put together the sprite."""
@@ -70,6 +77,9 @@ class Screen():
                     # Flip along the y axis
                     x = 7 - pixel_num % 8 + tile_x * 8
                     y = pixel_num // 8 + tile_y * 8
+                else:
+                    # XXX Is this actually invalid or does it just do both flips?
+                    raise ValueError('invalid NTFS transformation')
 
                 pixels[y][x] = palettes[tile.palette][pixel]
 
@@ -77,7 +87,7 @@ class Screen():
 
 
 ### cpac stuff
-# XXX Turn these into pretty classes, too
+# XXX Turn these into pretty structs, too
 
 CPACSection = namedtuple('CPACSection', ['offset', 'length'])
 

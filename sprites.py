@@ -1,7 +1,7 @@
 from io import BytesIO
 from struct import unpack
 
-from formats import NTFP, NTFS, Screen, parse_cpac
+from formats import palette, Screen, parse_cpac
 from lzss3 import decompress
 
 def split_into_tiles(data):
@@ -25,11 +25,7 @@ for n, section in enumerate(data_sections):
 # Rip a palette that goes with the Capcom logo
 data = BytesIO(data_sections[0])
 data.seek(0x2d80)
-palette = []
-
-for color in range(0x100):
-    palette.append(NTFP(data.read(2)))
-
+capcom_palette = palette.parse(data.read(0x200))
 
 # Rip the Capcom logo
 data = BytesIO(data_sections[2])
@@ -41,7 +37,7 @@ tiles = split_into_tiles(tiles)
 data.seek(0xa00 + 0xde8)
 screen = Screen(decompress(data))
 
-image = screen.image([palette], tiles)
+image = screen.image([capcom_palette], tiles)
 
 with open('/tmp/logo.ppm', 'w') as output:
     # PPM header
